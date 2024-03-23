@@ -1,6 +1,7 @@
 # ExploringD3.js
 Interview Assignment
-![image](https://github.com/isayeed33/ExploringD3.js/assets/61356974/2730fd5b-9b64-4a2b-b085-3b50c154b011)
+
+![image](https://github.com/isayeed33/ExploringD3.js/assets/61356974/3eccaa97-233f-4c1a-9825-338b6affa1a3)
 
 To open an HTML file, you can follow these steps:
 
