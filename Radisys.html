@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D3.js Multicolor Doughnut Chart with Tooltip</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<style>
+  .chart-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: start;
+    justify-content: space-evenly;
+    gap: 20px;
+  }
+
+  .chart-container1 {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .chart-header {
+    font-weight: bolder;
+    font-size: x-large;
+  }
+
+  .chart {
+    height: 100%;
+    width: 100%;
+    border: 3px solid lightgray;
+    border-radius: 20px;
+    padding: 10px;
+
+  }
+
+  .bar {
+    fill-opacity: 0.8;
+  }
+
+  .bar:hover {
+    fill-opacity: 1;
+  }
+
+  .tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 6px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 1px solid steelblue;
+    border-radius: 5px;
+    pointer-events: none;
+    opacity: 0;
+  }
+</style>
+
+<body>
+
+  <div class="chart-container">
+    <div class="chart">
+      <text class="chart-header">Severity Analysis: Production vs. Non-Production</text>
+      <svg id="doughnut" width="500" height="400">
+      </svg>
+      <p>Here are some key points:</p>
+      <ul>
+        <li>The doughnut chart provides a clear visual representation of the distribution of severity levels across
+          different sites (prod or non-prod).</li>
+        <li>It allows stakeholders to quickly identify which severity levels have the highest occurrence and which sites
+          are most affected.</li>
+        <li>The tooltip feature enhances the interactivity of the chart by providing detailed information about each
+          severity category, including the count of occurrences at each site.</li>
+        <li>The inclusion of the "Total" count in the center of the chart provides an overview of the total count of all
+          severity levels, helping stakeholders understand the overall impact of faults across all sites.</li>
+      </ul>
+    </div>
+    <div class="chart">
+      <text class="chart-header">Affected Services and Type By Month</text>
+      <svg id="stacked-bar" width="500" height="400">
+      </svg>
+      <p>Here are some key points:</p>
+      <ul>
+        <li>The stacked bar chart provides insights into the distribution of service-affecting and non-service-affecting
+          events over time.</li>
+        <li>Stakeholders can identify trends and patterns in the occurrence of events across different months.</li>
+        <li>The tooltip feature enhances interactivity by providing additional context (TYPE) and it's count when exploring the
+          data.</li>
+        <li>Overall, the chart helps stakeholders understand the frequency and distribution of different types of
+          events, enabling informed decision-making and proactive management of network issues.</li>
+      </ul>
+    </div>
+  </div>
+  </div>
+  <div id="tooltip"
+    style="position: absolute; opacity: 0; padding: 5px; border-radius: 10px; color: black; font-weight: bolder;  border: 1px solid white">
+  </div>
+
+  <script>
+    const Tabledata = [
+      {
+        Severity: "CRITICAL",
+        Fault: "ONT-SFP-LOW-TEMPERATURE",
+        Entity: "ont2-2103",
+        Type: "ONT",
+        "Last Occurence Time": "02-07-24 17:59",
+        OLT: "olt-2103",
+        Site: "site3",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "CRITICAL",
+        Fault: "ONT-SFP-LOW-TEMPERATURE",
+        Entity: "ont1-2103",
+        Type: "ONT",
+        "Last Occurence Time": "02-07-24 17:59",
+        OLT: "olt-2103",
+        Site: "site3",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "WARNING",
+        Fault: "HIGH-TEMPERATURE",
+        Entity: "OLT-117",
+        Type: "OLT",
+        "Last Occurence Time": "02-07-24 17:33",
+        OLT: "OLT-117",
+        Site: "non-production-site",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "CRITICAL",
+        Fault: "ONT-SFP-LOW-TX-POWER",
+        Entity: "ont1-2103",
+        Type: "ONT",
+        "Last Occurence Time": "02-07-24 16:44",
+        OLT: "olt-2103",
+        Site: "site3",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "MAJOR",
+        Fault: "ONT-SFP-LOW-TX-POWER",
+        Entity: "ont3-2103",
+        Type: "ONT",
+        "Last Occurence Time": "02-07-24 16:14",
+        OLT: "olt-2103",
+        Site: "site3",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "MINOR",
+        Fault: "HIGH-TEMPERATURE",
+        Entity: "olt-2103",
+        Type: "OLT",
+        "Last Occurence Time": "02-07-24 14:46",
+        OLT: "olt-2103",
+        Site: "site3",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "WARNING",
+        Fault: "ONT-SFP-HIGH-TX-POWER",
+        Entity: "ont2-2103",
+        Type: "ONT",
+        "Last Occurence Time": "02-07-24 13:43",
+        OLT: "olt-2103",
+        Site: "site3",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "WARNING",
+        Fault: "HIGH-TEMPERATURE",
+        Entity: "olt169",
+        Type: "OLT",
+        "Last Occurence Time": "02-07-24 12:42",
+        OLT: "olt169",
+        Site: "site3",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "MAJOR",
+        Fault: "ONT-SFP-LOW-TEMPERATURE",
+        Entity: "es6k7-32-1",
+        Type: "ONT",
+        "Last Occurence Time": "02-07-24 12:29",
+        OLT: "OLT-117",
+        Site: "non-production-site",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "WARNING",
+        Fault: "HIGH-TEMPERATURE",
+        Entity: "OLT-117",
+        Type: "OLT",
+        "Last Occurence Time": "02-07-24 8:57",
+        OLT: "OLT-117",
+        Site: "non-production-site",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "MINOR",
+        Fault: "UNKNOWN-ME-DISCOVERED",
+        Entity: "UNKNOWN",
+        Type: "ONT",
+        "Last Occurence Time": "02-02-24 17:18",
+        OLT: "olt169",
+        Site: "site3",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "MINOR",
+        Fault: "UNKNOWN-ME-DISCOVERED",
+        Entity: "UNKNOWN",
+        Type: "ONT",
+        "Last Occurence Time": "02-01-24 14:40",
+        OLT: "olt-2103",
+        Site: "site3",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "CRITICAL",
+        Fault: "SFP-MISMATCH",
+        Entity: "SFPPON-10",
+        Type: "me_port",
+        "Last Occurence Time": "02-01-24 14:37",
+        OLT: "olt-2103",
+        Site: "site3",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "MINOR",
+        Fault: "ONT-DYING-GASP",
+        Entity: "test2-2103",
+        Type: "ONT",
+        "Last Occurence Time": "02-01-24 14:26",
+        OLT: "olt-2103",
+        Site: "site3",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "CRITICAL",
+        Fault: "ME-DOWN",
+        Entity: "olt_176",
+        Type: "OLT",
+        "Last Occurence Time": "01-29-2024 17:38:33",
+        OLT: "olt_176",
+        Site: "site3",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "MAJOR",
+        Fault: "OLT-NTP-CLOCK-IS-OUT-OF-SYNC",
+        Entity: "olt_176",
+        Type: "OLT",
+        "Last Occurence Time": "01-29-2024 17:27:35",
+        OLT: "olt_176",
+        Site: "site3",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "WARNING",
+        Fault: "HIGH-TEMPERATURE",
+        Entity: "olt_176",
+        Type: "OLT",
+        "Last Occurence Time": "01-29-2024 17:14:42",
+        OLT: "olt_176",
+        Site: "site3",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "WARNING",
+        Fault: "NTP-SERVER-CONNECTIVITY-LOST",
+        Entity: "olt_176",
+        Type: "OLT",
+        "Last Occurence Time": "01-29-2024 17:13:35",
+        OLT: "olt_176",
+        Site: "site3",
+        "Service Affecting": "SA_NON_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "CRITICAL",
+        Fault: "OLT-ETHERNET-LINK-DOWN",
+        Entity: "NNI-4",
+        Type: "me_port",
+        "Last Occurence Time": "01-29-2024 17:13:30",
+        OLT: "olt_176",
+        Site: "site3",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+      {
+        Severity: "CRITICAL",
+        Fault: "DHCP-SERVER-TIMEOUT",
+        Entity: "cont_176",
+        Type: "CONTROLLER",
+        "Last Occurence Time": "01-25-2024 18:52:43",
+        OLT: "N/A",
+        Site: "N/A",
+        "Service Affecting": "SA_SERVICE_AFFECTING",
+      },
+    ];
+
+    // Group the data by severity
+    const groupedData = Tabledata.reduce((acc, obj) => {
+      const { Severity, Site } = obj;
+      acc[Severity] = acc[Severity] || { total: 0, sites: {} };
+      acc[Severity].total++;
+      acc[Severity].sites[Site] = (acc[Severity].sites[Site] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Calculate total percentage of severity and count "Site" values
+    const data = Object.entries(groupedData).map(([severity, data]) => {
+      const totalCount = Object.values(data.sites).reduce((a, b) => a + b, 0);
+      const percentage = ((data.total / Tabledata.length) * 100).toFixed() + '%';
+      return {
+        [severity]: percentage,
+        ...data.sites,
+        Total: data.total
+      };
+    });
+
+    const width = 400;
+    const height = 400;
+    const radius = Math.min(width, height) / 2;
+
+    const svg = d3.select("#doughnut")
+      .append("g")
+      .attr("transform", `translate(${width / 2},${height / 2})`);
+
+    const customColors = ["darkred", "#FFBF00", "#cc3300", "#ff9966"];
+    const color = d3.scaleOrdinal()
+      .domain(data.map(d => Object.keys(d).filter(key => key !== "Total")))
+      // .range(d3.schemeTableau10);
+      .range(customColors);
+
+    const pie = d3.pie()
+      .sort(null)
+      .value(d => d.Total);
+
+    const path = d3.arc()
+      .outerRadius(radius - 5)
+      .innerRadius(100);
+
+    const arc = svg.selectAll(".arc")
+      .data(pie(data))
+      .enter()
+      .append("g")
+      .attr("class", "arc")
+      .on("mouseover", function (event, d) {
+        const keys = Object.keys(d.data);
+        const tooltipData = keys.map(key => `${key}: ${d.data[key]}`);
+        const tooltip = d3.select("#tooltip");
+        tooltip.html(tooltipData.join("<br>"));
+        tooltip.style("left", (event.pageX + 10) + "px");
+        tooltip.style("top", (event.pageY + 10) + "px");
+        tooltip.transition().duration(200).style("opacity", 0.9);
+        const sectionColor = color(keys[0]);
+        tooltip.style("background-color", sectionColor);
+        d3.select(this).select("path").attr("fill", d => d3.rgb(sectionColor).brighter(0.5));
+      })
+      .on("mouseout", function (event, d) {
+        d3.select("#tooltip").transition().duration(500).style("opacity", 0);
+        const keys = Object.keys(d.data).filter(key => key !== "Total");
+        d3.select(this).select("path").attr("fill", color(keys[0]));
+      });
+
+    arc.append("path")
+      .attr("d", path)
+      .attr("fill", (d, i) => color(Object.keys(data[i]).filter(key => key !== "Total")[0]));
+
+    arc.append("text")
+      .attr("transform", d => `translate(${path.centroid(d)})`)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "12px")
+      .attr("font-weight", "bold")
+      .text(d => Object.keys(d.data).filter(key => key !== "Total")[0]);
+
+    // arc.append("text")
+    //   .attr("transform", d => `translate(${path.centroid(d)})`)
+    //   .attr("font-size", "15px")
+    //   .attr("font-weight", "bold")
+    //   .attr("text-anchor", "middle")
+    //   .text(d => {
+    //     const total = d.data.Total;
+    //     const percentage = ((total / data.reduce((acc, d) => acc + d.Total, 0)) * 100).toFixed();
+    //     return percentage + "%";
+    //   });
+
+    svg.append("text")
+      .attr("text-anchor", "middle")
+      .attr("font-weight", "bold")
+      .attr("font-size", "16px")
+      .text("TOTAL FAULTS")
+      .attr("dy", "-0.5em");
+
+    const totalCount = data.reduce((acc, d) => acc + d.Total, 0);
+    svg.append("text")
+      .attr("text-anchor", "middle")
+      .attr("font-size", "16px")
+      .text(totalCount)
+      .attr("dy", "0.5em");
+
+    // -------------------------------------------------------------------------------------------------------------------
+    function processData(data) {
+      // Initialize an empty object to store the counts for each month
+      const monthData = {};
+
+      // Iterate over each entry in the data
+      data.forEach(entry => {
+        // Extract the month from the "Last Occurrence Time"
+        const month = new Date(entry["Last Occurence Time"]).toLocaleString('default', { month: 'long' });
+
+        // If the month doesn't exist in the monthData, initialize it
+        if (!monthData[month]) {
+          monthData[month] = {
+            month: month,
+            SA_SERVICE_AFFECTING: 0,
+            SA_NON_SERVICE_AFFECTING: 0
+          };
+        }
+
+        // Increment the count based on the "Service Affecting" value
+        if (entry["Service Affecting"] === "SA_SERVICE_AFFECTING") {
+          monthData[month].SA_SERVICE_AFFECTING++;
+        } else if (entry["Service Affecting"] === "SA_NON_SERVICE_AFFECTING") {
+          monthData[month].SA_NON_SERVICE_AFFECTING++;
+        }
+
+        // Increment the count for each type dynamically
+        const type = entry["Type"];
+        if (type) {
+          if (!monthData[month][type]) {
+            monthData[month][type] = 0;
+          }
+          monthData[month][type]++;
+        }
+      });
+
+      // Convert the object into an array of values
+      let result = Object.values(monthData);
+
+      // Sort the array by month
+      result.sort((a, b) => {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        return months.indexOf(a.month) - months.indexOf(b.month);
+      });
+
+      return result;
+    }
+
+    const data1 = processData(Tabledata);
+    console.log('data1', data1)
+
+    const keys = ["SA_SERVICE_AFFECTING", "SA_NON_SERVICE_AFFECTING"];
+    const colorScale = d3.scaleOrdinal()
+      .domain(keys)
+      .range(["red", "orange"]);
+
+    const margin = { top: 50, right: 20, bottom: 30, left: 40 };
+    const width1 = 600 - margin.left - margin.right;
+    const height1 = 400 - margin.top - margin.bottom;
+
+    const svg1 = d3.select("#stacked-bar")
+      .attr("width", width1 + margin.left + margin.right)
+      .attr("height", height1 + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleBand()
+      .domain(data1.map(d => d.month))
+      .range([0, width1])
+      .padding(0.1);
+
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(data1, d => d3.sum(keys, key => d[key]))]).nice()
+      .range([height1, 0]);
+
+    svg1.append("g")
+      .selectAll("g")
+      .data(d3.stack().keys(keys)(data1))
+      .enter().append("g")
+      .attr("fill", d => colorScale(d.key))
+      .selectAll("rect")
+      .data(d => d)
+      .enter().append("rect")
+      .attr("x", d => x(d.data.month))
+      .attr("y", d => y(d[1]))
+      .attr("height", d => y(d[0]) - y(d[1]))
+      .attr("width", x.bandwidth())
+      .on("mouseover", function (event, d) {
+        const category = d3.select(this.parentNode).datum().key;
+        const monthData = d.data;
+        let tooltipText = `Service: ${category}: ${d[1] - d[0]}<hr>`;
+        Object.keys(monthData).forEach((key, value) => {
+          if (key !== "month" && key !== category) {
+            tooltipText += `<br>${key}: ${monthData[key]}`;
+          }
+        }
+        );
+        tooltip.html(tooltipText)
+          .style("opacity", 1)
+          .style("left", (event.pageX) + "px")
+          .style("top", (event.pageY - 28) + "px")
+          .style("text-align", "left")
+          .style("background", colorScale(category));
+      })
+      .on("mouseout", function (event, d) {
+        tooltip.style("opacity", 0);
+      });
+
+    svg1.append("g")
+      .attr("transform", `translate(0,${height1})`)
+      .call(d3.axisBottom(x));
+
+    // Tooltip
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("font-weight", "bold")
+      .style("font-size", "12px")
+      .style("border", "1px solid white")
+      .style("opacity", 0);
+
+  </script>
+</body>
+
+</html>
