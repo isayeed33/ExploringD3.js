@@ -1,5 +1,4 @@
 # ExploringD3.js
-Interview Assignment
 
 ![image](https://github.com/isayeed33/ExploringD3.js/assets/61356974/3eccaa97-233f-4c1a-9825-338b6affa1a3)
 
